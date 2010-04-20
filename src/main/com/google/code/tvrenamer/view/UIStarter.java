@@ -49,7 +49,7 @@ public class UIStarter {
       .getProperty("file.separator");
   public static final String DEFAULT_FORMAT_STRING = "%S [%sx%e] %t";
 
-//  private static Logger logger = Logger.getLogger(UIStarter.class);
+  // private static Logger logger = Logger.getLogger(UIStarter.class);
 
   private static Shell shell;
   private Table tblResults;
@@ -122,7 +122,7 @@ public class UIStarter {
     btnFormat.addSelectionListener(new SelectionAdapter() {
       @Override
       public void widgetSelected(SelectionEvent e) {
-        populateTable();
+        doApply();
       }
     });
 
@@ -286,20 +286,20 @@ public class UIStarter {
                 @SuppressWarnings("fallthrough")
                 public void handleEvent(final Event e) {
                   switch (e.type) {
-                    case SWT.FocusOut:
+                  case SWT.FocusOut:
+                    item.setText(column, text.getText());
+                    text.dispose();
+                    break;
+                  case SWT.Traverse:
+                    switch (e.detail) {
+                    case SWT.TRAVERSE_RETURN:
                       item.setText(column, text.getText());
+                      // fall through
+                    case SWT.TRAVERSE_ESCAPE:
                       text.dispose();
-                      break;
-                    case SWT.Traverse:
-                      switch (e.detail) {
-                        case SWT.TRAVERSE_RETURN:
-                          item.setText(column, text.getText());
-                          // fall through
-                        case SWT.TRAVERSE_ESCAPE:
-                          text.dispose();
-                          e.doit = false;
-                      }
-                      break;
+                      e.doit = false;
+                    }
+                    break;
                   }
                 }
               };
@@ -340,8 +340,7 @@ public class UIStarter {
 
     // set the icon for the application
     try {
-      InputStream icon = getClass().getResourceAsStream(
-          "/icons/tvrenamer.png");
+      InputStream icon = getClass().getResourceAsStream("/icons/tvrenamer.png");
       if (icon != null) {
         shell.setImage(new Image(display, icon));
       } else {
@@ -353,43 +352,42 @@ public class UIStarter {
   }
 
   private void launch() {
-	Display display = null;
-	try {
-	    // place the window in the centre of the primary monitor
-	    Monitor primary = Display.getCurrent().getPrimaryMonitor();
-	    Rectangle bounds = primary.getBounds();
-	    Rectangle rect = shell.getBounds();
-	    int x = bounds.x + (bounds.width - rect.width) / 2;
-	    int y = bounds.y + (bounds.height - rect.height) / 2;
-	    shell.setLocation(x, y);
+    Display display = null;
+    try {
+      // place the window in the centre of the primary monitor
+      Monitor primary = Display.getCurrent().getPrimaryMonitor();
+      Rectangle bounds = primary.getBounds();
+      Rectangle rect = shell.getBounds();
+      int x = bounds.x + (bounds.width - rect.width) / 2;
+      int y = bounds.y + (bounds.height - rect.height) / 2;
+      shell.setLocation(x, y);
 
-	    // Start the shell
-	    shell.pack();
-	    shell.open();
+      // Start the shell
+      shell.pack();
+      shell.open();
 
-	    display = shell.getDisplay();
-	    while (!shell.isDisposed()) {
-	      if (!display.readAndDispatch()) {
-	        display.sleep();
-	      }
-	    }
-	    display.dispose();
-	}
-	catch(IllegalArgumentException argumentException) {
-		String message = "Drag and Drop is not currently supported on your operating system, please use the 'Browse Files' option above";
-//		showMessageBox(Constants.ERROR, message);
-//		display.dispose();
-		System.out.println(argumentException.getMessage() + " exception: " + message);
-		argumentException.printStackTrace();
-		JOptionPane.showMessageDialog(null, message);
-//		launch();
-		System.exit(1);
-	}
-	catch(Exception exception) {
-		String message = "An error occoured, please check your internet connection, java version or run from the command line to show errors";
-		showMessageBox(Constants.ERROR, message);
-		exception.printStackTrace();
-	}
+      display = shell.getDisplay();
+      while (!shell.isDisposed()) {
+        if (!display.readAndDispatch()) {
+          display.sleep();
+        }
+      }
+      display.dispose();
+    } catch (IllegalArgumentException argumentException) {
+      String message = "Drag and Drop is not currently supported on your operating system, please use the 'Browse Files' option above";
+      // showMessageBox(Constants.ERROR, message);
+      // display.dispose();
+      System.out.println(argumentException.getMessage() + " exception: "
+          + message);
+      argumentException.printStackTrace();
+      JOptionPane.showMessageDialog(null, message);
+      // launch();
+      System.exit(1);
+    } catch (Exception exception) {
+      String message = "An error occoured, please check your internet connection, java version or run from the command line to show errors";
+      showMessageBox(Constants.ERROR, message);
+      exception.printStackTrace();
+    }
   }
 
   private void initiateRenamer(String[] fileNames) {
@@ -403,33 +401,8 @@ public class UIStarter {
     textShowName.setText(showName);
     textShowName.setEnabled(true);
 
-    showList = tv.downloadOptions(showName);
-
-    if (showList.isEmpty()) {
-      return;
-    }
-
-    if (showList.size() > 1) {
-      showCombo.setEnabled(true);
-    }
-
-    showCombo.removeAll();
-
-    for (Show show : showList) {
-      showCombo.add(show.getName());
-    }
-
-    showCombo.select(0);
-    showCombo.pack(true);
-
-    btnFormat.setEnabled(true);
-
-    tv.setShow(showList.get(showCombo.getSelectionIndex()));
-
-    tv.downloadListing();
-
-    populateTable();
-
+    // Moved functionality
+    otherShowname( showName );
     // // Sort the list descending by Episode
     // tblResults.setSortColumn(col1);
     // tblResults.setSortDirection(SWT.DOWN);
@@ -446,8 +419,8 @@ public class UIStarter {
         File newFile = new File(file.getParent() + pathSeparator
             + item.getText(2));
         file.renameTo(newFile);
-//        logger.info("Renamed " + file.getAbsolutePath() + " to "
-//            + newFile.getAbsolutePath());
+        // logger.info("Renamed " + file.getAbsolutePath() + " to "
+        // + newFile.getAbsolutePath());
         renamedFiles++;
         files.set(index, newFile.getAbsolutePath());
       }
@@ -467,8 +440,8 @@ public class UIStarter {
     for (int i = 0; i < files.size(); i++) {
       String fileName = files.get(i);
       String oldFilename = new File(fileName).getName();
-      String newFilename = tv.parseFileName(oldFilename, textShowName.getText(),
-          textFormat.getText());
+      String newFilename = tv.parseFileName(oldFilename,
+          textShowName.getText(), textFormat.getText());
       TableItem item = new TableItem(tblResults, SWT.NONE);
       item.setText(new String[] { i + 1 + "", oldFilename, newFilename });
       item.setChecked(true);
@@ -532,12 +505,59 @@ public class UIStarter {
     } else if (type == Constants.QUESTION) {
       swtIconValue = SWT.ICON_QUESTION;
     } else {
-//      logger.error("Tried to show a box with an undefined message type");
+      // logger.error("Tried to show a box with an undefined message type");
       return;
     }
 
     MessageBox msgSuccess = new MessageBox(shell, SWT.OK | swtIconValue);
     msgSuccess.setMessage(message);
     msgSuccess.open();
+  }
+
+  /**
+   * Handles the Apply Button, either just re-populating the
+   * Table or looking for a different show name
+   */
+  private void doApply() {
+    String showName = textShowName.getText();
+    if (showName != tv.getShowname()) {
+      otherShowname(showName);
+    } else {
+      populateTable();
+    }
+  }
+
+  /**
+   * Handles a change in showname, ignoring an empty show list
+   * and populating the Table anyway
+   *
+   * @param showName  the showname to search for
+   */
+  private void otherShowname(String showName) {
+    showList = tv.downloadOptions(showName);
+
+    try {
+      if (showList.size() > 1) {
+        showCombo.setEnabled(true);
+      }
+
+      showCombo.removeAll();
+
+      for (Show show : showList) {
+        showCombo.add(show.getName());
+      }
+
+      showCombo.select(0);
+      showCombo.pack(true);
+
+      btnFormat.setEnabled(true);
+
+      tv.setShow(showList.get(showCombo.getSelectionIndex()));
+      tv.downloadListing();
+    } catch (Exception e) {
+      System.out.println("TVListing Error " + e.getMessage());
+    }
+
+    populateTable();
   }
 }

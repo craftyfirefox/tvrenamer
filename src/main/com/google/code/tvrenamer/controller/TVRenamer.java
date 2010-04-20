@@ -9,10 +9,13 @@ import com.google.code.tvrenamer.model.Season;
 import com.google.code.tvrenamer.model.Show;
 
 public class TVRenamer {
-//  private static Logger logger = Logger.getLogger(TVRenamer.class);
+  // private static Logger logger = Logger.getLogger(TVRenamer.class);
   private Show show;
+  // saving the showname to be able to compare later on
+  private String _showname;
 
   public TVRenamer() {
+    _showname = "";
   }
 
   public void setShow(Show show) {
@@ -20,6 +23,8 @@ public class TVRenamer {
   }
 
   public ArrayList<Show> downloadOptions(String showName) {
+    // store the "current" showname
+    _showname = showName;
     return TVRageProvider.getShowOptions(showName);
   }
 
@@ -45,11 +50,15 @@ public class TVRenamer {
     String showTitle = replacePunctuation(showName.toLowerCase());
     String cleanedFileName = replacePunctuation(fileName.toLowerCase());
 
+    /*
+     * DEPRECATED: Unnecessary Requirement
     if (!cleanedFileName.startsWith(showTitle)) {
-//      logger.error("Show's name (" + showName + ") does not match file name: "
-//          + fileName);
+      // logger.error("Show's name (" + showName +
+      // ") does not match file name: "
+      // + fileName);
       return fileName;
     }
+    */
 
     // grabs the show's name out of the filename, for shows with numeric titles
     // String seasonNum = fileName.toLowerCase();
@@ -72,12 +81,12 @@ public class TVRenamer {
 
     Season s = show.getSeason(seasonNum);
     if (s == null) {
-//      logger.error("season not found: " + seasonNum);
+      // logger.error("season not found: " + seasonNum);
       return fileName;
     }
     String title = s.getTitle(episodeNum);
     if (title == null) {
-//      logger.error("Title not found for episode: " + episodeNum);
+      // logger.error("Title not found for episode: " + episodeNum);
       return fileName;
     }
     title = sanitiseTitle(title);
@@ -120,5 +129,9 @@ public class TVRenamer {
     s = s.replaceAll("\\.", " ");
     s = s.replaceAll(",", " ");
     return s;
+  }
+
+  public String getShowname() {
+    return _showname;
   }
 }
