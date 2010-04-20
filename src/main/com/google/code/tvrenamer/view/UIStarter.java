@@ -440,8 +440,14 @@ public class UIStarter {
     for (int i = 0; i < files.size(); i++) {
       String fileName = files.get(i);
       String oldFilename = new File(fileName).getName();
-      String newFilename = tv.parseFileName(oldFilename,
-          textShowName.getText(), textFormat.getText());
+      String newFilename;
+      try {
+         newFilename = tv.parseFileName(oldFilename,
+            textShowName.getText(), textFormat.getText());
+      } catch(Exception e) {
+        // Just skip errors there and use old filename
+        newFilename = oldFilename;
+      }
       TableItem item = new TableItem(tblResults, SWT.NONE);
       item.setText(new String[] { i + 1 + "", oldFilename, newFilename });
       item.setChecked(true);
@@ -555,7 +561,8 @@ public class UIStarter {
       tv.setShow(showList.get(showCombo.getSelectionIndex()));
       tv.downloadListing();
     } catch (Exception e) {
-      System.out.println("TVListing Error " + e.getMessage());
+      // ignore errors here to be able to populate the table anyways
+      // System.out.println("TVListing Error " + e.getMessage());
     }
 
     populateTable();
